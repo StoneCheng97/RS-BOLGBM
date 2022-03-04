@@ -15,14 +15,14 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression, LinearRegression
-from tensorflow.python.keras.models import Sequential
-from tensorflow.python.keras.layers.core import Dense, Activation
-from tensorflow.keras.optimizers import SGD
+# from tensorflow.python.keras.models import Sequential
+# from tensorflow.python.keras.layers.core import Dense, Activation
+# from tensorflow.keras.optimizers import SGD
 from six import StringIO
 import lightgbm as lgb
 from lightgbm import LGBMClassifier
 from sklearn.metrics import precision_score, accuracy_score, recall_score, f1_score
-from tensorflow.python.keras.layers import Dropout
+# from tensorflow.python.keras.layers import Dropout
 
 from pyspark import SparkContext
 from pyspark.sql.types import StructType, StructField, FloatType
