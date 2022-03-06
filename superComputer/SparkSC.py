@@ -176,15 +176,18 @@ def modeling(features, label):
             print(clf_name, "-Precision:", precision_score(Y_part, Y_pred, average='weighted'))
             print(clf_name, "-REC:", recall_score(Y_part, Y_pred, average='weighted'))
             print(clf_name, "-F-Score:", f1_score(Y_part, Y_pred, average='weighted'))
+            np.savetxt("D:\pythonProject\spark\superComputer\\true_values", Y_part)
+            np.savetxt("D:\pythonProject\spark\superComputer\predict_values",Y_pred)
+
             # Plotting the results
-            fig = plt.figure()
-            plt.plot(Y_part[0:2000])
-            plt.plot(Y_pred[0:2000])
-            plt.title("LightGBM")
-            plt.xlabel('Hour')
-            plt.ylabel('Electricity load')
-            plt.legend(('Actual', 'Predicted'), fontsize='15')
-            plt.show()
+            # fig = plt.figure()
+            # plt.plot(Y_part[0:2000])
+            # plt.plot(Y_pred[0:2000])
+            # plt.title("LightGBM")
+            # plt.xlabel('Hour')
+            # plt.ylabel('Electricity load')
+            # plt.legend(('Actual', 'Predicted'), fontsize='15')
+            # plt.show()
             # fig.savefig('results/LSTM/final_output.jpg', bbox_inches='tight')
 
             # # Plot of the loss
