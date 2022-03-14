@@ -38,10 +38,16 @@ sjtu_2019 = pd.read_csv(path4).drop(
      'Partition_Number',
      'Preceding Job Number', 'Think Time from Preceding Job'], axis=1)
 ssc_2019 = pd.read_csv(path5)
-ssc_2018 = pd.read_csv(path6)
+ssc_2018 = pd.read_csv(path6).drop(
+    ['Job_Number', 'RM', 'RT', 'ACTU', 'Used_Memory', 'Executable (Application) Number', 'Group_ID',
+     'Partition_Number',
+     'Preceding Job Number', 'Think Time from Preceding Job'], axis=1)
 ssc_2017 = pd.read_csv(path7)
 tc4060_2019 = pd.read_csv(path8)
-tc4060_2017 = pd.read_csv(path9)
+tc4060_2017 = pd.read_csv(path9).drop(
+    ['Job_Number', 'RM', 'RT', 'ACTU', 'Used_Memory', 'Executable (Application) Number', 'Group_ID',
+     'Partition_Number',
+     'Preceding Job Number', 'Think Time from Preceding Job'], axis=1)
 tc4060_2018 = pd.read_csv(path10)
 wxsc_2017 = pd.read_csv(path11)
 # 1 年=31536000 秒，去掉时间为负数和运行时间大于1.5年的数据
@@ -59,15 +65,22 @@ wxsc_2017_1 = wxsc_2017[np.log(wxsc_2017['Run_Time']) > 0]
 
 # 将Status状态值大于5的都转换成运行成功的状态值1【此字段待定】
 
-sjtu_2019.loc[sjtu_2019['Status'] > 5, 'Status'] = 1
-sjtu_2019.to_csv("D:\pythonProject\spark\datas\sc\sjtu_2019_new.csv")
+# sjtu_2019.loc[sjtu_2019['Status'] > 5, 'Status'] = 1
+# sjtu_2019.to_csv("D:\pythonProject\spark\datas\sc\sjtu_2019_new3.csv")
+# sjtu_2019.to_csv("D:\pythonProject\spark\datas\sc\sjtu_2019_new.csv")
 # ssc_2019.loc[ssc_2019['Status'] > 5, 'Status'] = 1
 # ssc_2018_1.loc[ssc_2018_1['Status'] > 5, 'Status'] = 1
-ssc_2017.loc[ssc_2017['Status'] > 5, 'Status'] = 1
+# ssc_2018_1.loc[ssc_2018_1['Status'] < 0, 'Status'] = 0
+tc4060_2017_2.loc[tc4060_2017_2['Status'] < 0, 'Status'] = 0
+tc4060_2017_2.loc[tc4060_2017_2['Status'] > 5, 'Status'] = 1
+tc4060_2017_2.to_csv("D:\pythonProject\spark\datas\sc\\tc4060_2017_new.csv")
+# ssc_2018_1.to_csv("D:\pythonProject\spark\datas\sc\ssc_2018_new.csv")
+# ssc_2017.loc[ssc_2017['Status'] > 5, 'Status'] = 1
+# ssc_2017.to_csv("D:\pythonProject\spark\datas\sc\ssc_2017_new.csv")
 
-fig, ax = plt.subplots(figsize=(10, 10))
-scatter_matrix(tc4060_2019_1[['Run_Time', 'NAP', 'Status']], alpha=0.2, diagonal='hist', ax=ax)
-plt.show()
+# fig, ax = plt.subplots(figsize=(10, 10))
+# scatter_matrix(tc4060_2019_1[['Run_Time', 'NAP', 'Status']], alpha=0.2, diagonal='hist', ax=ax)
+# plt.show()
 
 # X = sjtu_2019.loc[:, ["Wait_Time", "NAP", "Run_Time", "User_ID", "Queue_Number", "Submit_Time"]]  # 特征
 # Y = sjtu_2019.loc[:, "Status"]  # 目标

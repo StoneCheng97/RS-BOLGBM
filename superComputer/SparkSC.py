@@ -42,14 +42,13 @@ pd.set_option('display.max_columns', 100)
 pd.set_option('display.max_rows', 1000)
 pd.set_option('display.width', 1000)
 pd.set_option('display.max_colwidth', 1000)
-
 spark = SparkSession.builder.master("local[*]").appName("SC").getOrCreate()
 # conf = SparkConf().setMaster("local").setAppName("sc")
 # sc = SparkContext().getOrCreate(conf)
 sq = SQLContext(spark.sparkContext)
 
 
-def preprocessing(subt=False, rt=False, wt=False):
+def preprocessing(subt=False, rt=False, nap=False, wt=False):
     schema = StructType([
         StructField("Job_Number", FloatType(), nullable=True),
         StructField("Submit_Time", FloatType(), nullable=True),
@@ -61,35 +60,56 @@ def preprocessing(subt=False, rt=False, wt=False):
         StructField("User_ID", FloatType(), nullable=True),
         StructField("Queue_Number", FloatType(), nullable=True)]
     )
+    # sjtu_2019_df = spark.read.csv("D:\pythonProject\spark\datas\sc\sjtu_2019_new3.csv", schema=schema).cache()
     sjtu_2019_df = spark.read.csv("D:\pythonProject\spark\datas\sc\sjtu_2019_new.csv", schema=schema).cache()
+    # sjtu_2019_df = spark.read.csv("D:\pythonProject\spark\datas\sc\ssc_2018_new.csv", schema=schema).cache()
+    # sjtu_2019_df = spark.read.csv("D:\pythonProject\spark\datas\sc\\tc4060_2017_new.csv", schema=schema).cache()
+    # sjtu_2019_df = spark.read.csv("D:\pythonProject\spark\datas\sc\ssc_2017_new.csv", schema=schema).cache()
     # sjtu_2019_df = sc.textFile("D:\pythonProject\spark\datas\sc\sjtu_2019_new.csv").cache()
     sjtu_2019_pd = sjtu_2019_df.toPandas().dropna()
     # 1.得到标注（目标）
     label = sjtu_2019_pd["Status"]
+
+    # tc4060_2017_new
+    # label = sjtu_2019_pd["Run_Time"]
     # 2.清洗数据
     # 3.特征选择
+    # tc4060_2017_new
+    # X = sjtu_2019_pd.loc[:, ["Wait_Time", "NAP", "Status", "User_ID", "Queue_Number", "Submit_Time"]]  # 特征
+    # Y = sjtu_2019_pd.loc[:, "Run_Time"]  # 目标
+
+    # sjtu_2019_pd
     X = sjtu_2019_pd.loc[:, ["Wait_Time", "NAP", "Run_Time", "User_ID", "Queue_Number", "Submit_Time"]]  # 特征
     Y = sjtu_2019_pd.loc[:, "Status"]  # 目标
-    #
+
     # 1.过滤思想
     skb = SelectKBest(k=5)
     skb.fit(X, Y)
-    # print(skb.transform(X))  # 留下了Submit_Time,Wait_Time和Run_Time，User_ID,Queue_Number去掉了NAP,RNP
+    # print("SelectKBest:", skb.transform(X))  # 留下了Submit_Time,Wait_Time和Run_Time，User_ID,Queue_Number去掉了NAP,RNP
 
     # 特征递归消除(RFE, recursive feature elimination)，SVR(kernel="linear")SVR()就是SVM算法来做回归用的方法（即输入标签是连续值的时候要用的方法）
     lr = LinearRegression()
     ref = RFE(estimator=lr, n_features_to_select=5, step=1)
     # ref = RFE(estimator=SVR(kernel="linear"), n_features_to_select=2, step=1)
-    # print(ref.fit_transform(X, Y))  # 留下了NAP,Wait_Time,User_ID,Queue_Number，Run_Time去掉了Submit_Time
-    #
-    # sjtu_2019_test = sjtu_2019_pd.drop("Status", axis=1) 全特征
-    sjtu_2019_test = sjtu_2019_pd.drop(["Status", "NAP", "RNP"], axis=1)
+    # print("REF:", ref.fit_transform(X, Y))  # 留下了NAP,Wait_Time,User_ID,Queue_Number，Run_Time去掉了Submit_Time
+
+    # sjtu_2019
+    sjtu_2019_test = sjtu_2019_pd.drop("Status", axis=1)  # 全特征
+    # sjtu_2019_test = sjtu_2019_pd.drop(["Status", "NAP", "RNP"], axis=1)
+
+    # tc4060_2017_new
+    # sjtu_2019_test = sjtu_2019_pd.drop(["Run_Time", "Submit_Time", "RNP"], axis=1)
     #
     # 4.特征处理 归一化，标准化
-    # scaler_lst = [subt, rt, nap, wt] 全特征
-    scaler_lst = [subt, rt, wt]
-    # column_lst = ["Submit_Time", "Run_Time", "NAP", "Wait_Time"]
-    column_lst = ["Submit_Time", "Run_Time", "Wait_Time"]
+    # situ_2019
+    scaler_lst = [subt, rt, nap, wt]  # 全特征
+    # scaler_lst = [subt, rt, wt]
+    # scaler_lst = [subt, rt, wt]
+    column_lst = ["Submit_Time", "Run_Time", "NAP", "Wait_Time"]  # 全特征
+    # column_lst = ["Submit_Time", "Run_Time", "Wait_Time"]
+
+    # tc4060_2017_new
+    # column_lst = ["Wait_Time", "User_ID", "Wait_Time"]
     for i in range(len(scaler_lst)):
         if not scaler_lst[i]:
             sjtu_2019_test[column_lst[i]] = \
@@ -139,31 +159,32 @@ def modeling(features, label):
     # return
     models = []
     models.append(("LGB", LGBMClassifier(boosting_type="goss", n_estimators=400, learning_rate=0.04)))
-    # models.append(("KNN", KNeighborsClassifier(n_neighbors=3)))
+    models.append(("KNN", KNeighborsClassifier(n_neighbors=3)))
     # 朴素贝叶斯【生产模型】不适合本实验的数据，对数据要求高
     # models.append(("GaussianNB", GaussianNB()))  # 贝叶斯算法适合离散值
     # models.append(("BernoulliNB", BernoulliNB()))  # 伯努利贝叶斯是二值化
     # 决策树
-    # models.append(("DecisionTreeGini", DecisionTreeClassifier()))  # 适合连续值分类
-    # models.append(("DecisionTreeEntropy", DecisionTreeClassifier(criterion="entropy")))  # 适合离散值比较多的分类
+    models.append(("DecisionTreeGini", DecisionTreeClassifier()))  # 适合连续值分类
+    models.append(("DecisionTreeEntropy", DecisionTreeClassifier(criterion="entropy")))  # 适合离散值比较多的分类
     # SVM 效果不好
     # models.append(("SVM Classifier",SVC()))
     # 集成方法
     # 随机森林 目前效果最好   接下来的工作是调参
-    # models.append(("RandomForest", RandomForestClassifier(n_estimators=100)))
+    models.append(("RandomForest", RandomForestClassifier(n_estimators=100)))
     # models.append(("RandomForest", RandomForest()))
-    # models.append(("RandomForestEntropy", RandomForestClassifier(n_estimators=100, criterion="entropy")))
+    models.append(("RandomForestEntropy", RandomForestClassifier(n_estimators=100, criterion="entropy")))
     # AdaBoost 效果不好，还出UndefinedMetricWarning警告，预测的值中不包含有实际值
     # models.append(("AdaBoost", AdaBoostClassifier(n_estimators=1000)))
     # 逻辑回归 效果不好,数据相关性不强
     # models.append(("LogisticRegression", LogisticRegression(max_iter=10000, C=1000, tol=1e-10,solver="sag")))
     # GBDT 效果还行
-    # models.append(("GBDT", GradientBoostingClassifier(max_depth=6, n_estimators=100)))
+    models.append(("GBDT", GradientBoostingClassifier(max_depth=6, n_estimators=100)))
     for clf_name, clf in models:
         clf.fit(X_train, Y_train)
         xy_lst = [(X_train, Y_train), (X_validation, Y_validation), (X_test, Y_test)]
         for i in range(len(xy_lst)):
             X_part = xy_lst[i][0]
+            # print(X_part)
             Y_part = xy_lst[i][1]  # 真实label
             Y_pred = clf.predict(X_part)  # 预测label
             print(i)  # 0表示训练集，1表示验证集，2表示测试集
@@ -176,14 +197,25 @@ def modeling(features, label):
             print(clf_name, "-Precision:", precision_score(Y_part, Y_pred, average='weighted'))
             print(clf_name, "-REC:", recall_score(Y_part, Y_pred, average='weighted'))
             print(clf_name, "-F-Score:", f1_score(Y_part, Y_pred, average='weighted'))
-            np.savetxt("D:\pythonProject\spark\superComputer\\true_values", Y_part)
-            np.savetxt("D:\pythonProject\spark\superComputer\predict_values",Y_pred)
-
+            # # np.savetxt("D:\pythonProject\spark\superComputer\\true_values", Y_part)
+            # np.savetxt("D:\pythonProject\spark\superComputer\predict_values", Y_pred)
+            # for j in range(len(Y_part[:100])):
+            #     Y_part_new = np.insert(Y_part, j, (Y_part[j] + 1) * 0.2)
+            #     Y_pred_new = np.insert(Y_pred, j, (Y_pred[j] + 1) * 0.2)
             # Plotting the results
-            # fig = plt.figure()
-            # plt.plot(Y_part[0:2000])
-            # plt.plot(Y_pred[0:2000])
-            # plt.title("LightGBM")
+            # plt.figure(figsize=(6, 4), dpi=300)
+            # y_plot_part = pick_arange(Y_part,1000)
+            # y_plot_pred = pick_arange(Y_pred,1000)
+            # y_plot_pred = pick_arange(Y_pred,1000)
+            # y_plot_pred = pick_arange(Y_pred,1000)
+            # mask = Y_part != 0
+            # mask2 = Y_pred != 0
+            # y_plot_part = Y_part[mask]
+            # y_plot_pred = Y_pred[mask2]
+            # plt.plot(Y_part_new[:500])
+            # plt.plot(Y_pred_new[:500])
+            # plt.yticks(np.arange(0, 5, 0.25))
+            # plt.title(i)
             # plt.xlabel('Hour')
             # plt.ylabel('Electricity load')
             # plt.legend(('Actual', 'Predicted'), fontsize='15')
@@ -220,6 +252,20 @@ def regr_test(features, label):
     print("MSE:", mean_squared_error(Y_pred, label.values))
 
 
+def pick_arange(arange, num):
+    if num > len(arange):
+        print('num out of length')
+    else:
+        output = np.array([], dtype=arange.dtype)
+        seg = len(arange) / num
+        for n in range(num):
+            if int(seg * (n + 1)) >= len(arange):
+                output = np.append(output, arange[-1])
+            else:
+                output = np.append(output, arange[int(seg * n)])
+        return output
+
+
 # 聚类
 def cluster_test():
     pass
@@ -234,7 +280,8 @@ def SparkMlib():
 
 def main():
     # features, label = preprocessing(subt=True,rt=True, wt=True)  # 标准化处理
-    features, label = preprocessing(subt=False, rt=False, wt=False)  # 标准化处理
+    # features, label = preprocessing(subt=False, rt=False, wt=False)  # 标准化处理
+    features, label = preprocessing(subt=False, rt=False, nap=False, wt=False)  # 全特征标准化处理
     # features, label = preprocessing(rt=False, nap=False, wt=False)  # 归一化处理
     # print(preprocessing(rt=True, nap=True, wt=True))
     modeling(features, label)
@@ -245,5 +292,7 @@ def main():
 if __name__ == '__main__':
     start = time.time()
     main()
+    # a = np.arange(0, 10)
+    # print(pick_arange(a, 5))
     end = time.time()
     print((end - start) / 60)
