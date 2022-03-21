@@ -21,7 +21,7 @@ from sklearn.linear_model import LogisticRegression, LinearRegression
 from six import StringIO
 import lightgbm as lgb
 from lightgbm import LGBMClassifier
-from sklearn.metrics import precision_score, accuracy_score, recall_score, f1_score
+from sklearn.metrics import precision_score, accuracy_score, recall_score, f1_score, roc_auc_score
 # from tensorflow.python.keras.layers import Dropout
 
 from pyspark import SparkContext
@@ -100,6 +100,7 @@ def preprocessing(subt=False, rt=False, nap=False, wt=False):
     # tc4060_2017_new
     # sjtu_2019_test = sjtu_2019_pd.drop(["Run_Time", "Submit_Time", "RNP"], axis=1)
     #
+
     # 4.特征处理 归一化，标准化
     # situ_2019
     scaler_lst = [subt, rt, nap, wt]  # 全特征
@@ -117,6 +118,7 @@ def preprocessing(subt=False, rt=False, nap=False, wt=False):
         else:
             sjtu_2019_test[column_lst[i]] = \
                 StandardScaler().fit_transform(sjtu_2019_test[column_lst[i]].values.reshape(-1, 1)).reshape(1, -1)[0]
+    print(sjtu_2019_test)
     return sjtu_2019_test, label
 
 
@@ -159,26 +161,26 @@ def modeling(features, label):
     # return
     models = []
     models.append(("LGB", LGBMClassifier(boosting_type="goss", n_estimators=400, learning_rate=0.04)))
-    models.append(("KNN", KNeighborsClassifier(n_neighbors=3)))
+    # models.append(("KNN", KNeighborsClassifier(n_neighbors=3)))
     # 朴素贝叶斯【生产模型】不适合本实验的数据，对数据要求高
     # models.append(("GaussianNB", GaussianNB()))  # 贝叶斯算法适合离散值
     # models.append(("BernoulliNB", BernoulliNB()))  # 伯努利贝叶斯是二值化
     # 决策树
-    models.append(("DecisionTreeGini", DecisionTreeClassifier()))  # 适合连续值分类
-    models.append(("DecisionTreeEntropy", DecisionTreeClassifier(criterion="entropy")))  # 适合离散值比较多的分类
+    # models.append(("DecisionTreeGini", DecisionTreeClassifier()))  # 适合连续值分类
+    # models.append(("DecisionTreeEntropy", DecisionTreeClassifier(criterion="entropy")))  # 适合离散值比较多的分类
     # SVM 效果不好
     # models.append(("SVM Classifier",SVC()))
     # 集成方法
     # 随机森林 目前效果最好   接下来的工作是调参
-    models.append(("RandomForest", RandomForestClassifier(n_estimators=100)))
+    # models.append(("RandomForest", RandomForestClassifier(n_estimators=100)))
     # models.append(("RandomForest", RandomForest()))
-    models.append(("RandomForestEntropy", RandomForestClassifier(n_estimators=100, criterion="entropy")))
+    # models.append(("RandomForestEntropy", RandomForestClassifier(n_estimators=100, criterion="entropy")))
     # AdaBoost 效果不好，还出UndefinedMetricWarning警告，预测的值中不包含有实际值
     # models.append(("AdaBoost", AdaBoostClassifier(n_estimators=1000)))
     # 逻辑回归 效果不好,数据相关性不强
     # models.append(("LogisticRegression", LogisticRegression(max_iter=10000, C=1000, tol=1e-10,solver="sag")))
     # GBDT 效果还行
-    models.append(("GBDT", GradientBoostingClassifier(max_depth=6, n_estimators=100)))
+    # models.append(("GBDT", GradientBoostingClassifier(max_depth=6, n_estimators=100)))
     for clf_name, clf in models:
         clf.fit(X_train, Y_train)
         xy_lst = [(X_train, Y_train), (X_validation, Y_validation), (X_test, Y_test)]
@@ -194,6 +196,7 @@ def modeling(features, label):
             # 通过将样本数量作为权重，可理解为评价值的置信度，数量越多，其评价值越可信
             # https://blog.csdn.net/Urbanears/article/details/105033731
             print(clf_name, "-ACC:", accuracy_score(Y_part, Y_pred))
+            # print(clf_name, "-AUC:", roc_auc_score(Y_part, Y_pred))
             print(clf_name, "-Precision:", precision_score(Y_part, Y_pred, average='weighted'))
             print(clf_name, "-REC:", recall_score(Y_part, Y_pred, average='weighted'))
             print(clf_name, "-F-Score:", f1_score(Y_part, Y_pred, average='weighted'))
