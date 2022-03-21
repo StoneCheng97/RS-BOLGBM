@@ -17,18 +17,23 @@ raw_data = pd.read_csv("D:\pythonProject\spark\datas\sc\sjtu_2019_new.csv")
 test_data = raw_data.dropna()
 # features = test_data.loc[:, ["Wait_Time", "NAP", "Run_Time", "User_ID", "Queue_Number", "Submit_Time"]]
 # labels = test_data.loc[:, "Status"]
-features, labels = test_data.drop(labels=['Status', 'RNP'], axis=1).values, test_data['Status'].values
+features, labels = test_data.drop(labels=['id', 'Status', 'RNP'], axis=1).values, test_data['Status'].values
+print("测试集：", test_data)
 print('特征：', features)
 print("目标：", labels)
+print("=================================================================")
 
-ref = ReliefF.ReliefF(n_neighbors=100,n_features_to_keep=5)
-ref.fit(features,labels)
-print(ref.transform(features))
-# skb = SelectKBest(score_func=chi2, k=5)# 去掉了Queue_Number
-# skb.fit(features, labels)
-# print("SelectKBest:", skb.transform(features))
-# print("Scores:",skb.scores_)
+ref = ReliefF.ReliefF(n_neighbors=100, n_features_to_keep=5)  # 去掉了Submit_Time
+ref.fit(features, labels)
+print("Relief", ref.transform(features))
+print("Relief Scores:", ref.feature_scores)
+print("Relief top_feature:", ref.top_features)
+# Relief Scores: [-12957132.   2319008.  -4967888.  19400030.  19289406.  19420496.]
+print("=================================================================")
 
-
-# clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=100), RandomForestClassifier(n_estimators=100))
-# print(np.mean(cross_val_score(clf, features, labels)))
+skb = SelectKBest(score_func=chi2, k=5)  # 去掉了Queue_Number
+skb.fit(features, labels)
+print("SelectKBest:", skb.transform(features))
+print("SelectKBest Scores:", skb.scores_)
+# SelectKBest Scores: [6.28210292e+09 5.02352322e+07 1.47366457e+09 2.12300444e+06
+#  6.71196507e+04 1.59312948e+03]

@@ -118,7 +118,7 @@ def preprocessing(subt=False, rt=False, nap=False, wt=False):
         else:
             sjtu_2019_test[column_lst[i]] = \
                 StandardScaler().fit_transform(sjtu_2019_test[column_lst[i]].values.reshape(-1, 1)).reshape(1, -1)[0]
-    print(sjtu_2019_test)
+    print("features：",sjtu_2019_test)
     return sjtu_2019_test, label
 
 
