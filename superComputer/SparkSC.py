@@ -200,8 +200,8 @@ def modeling(features, label):
             print(clf_name, "-Precision:", precision_score(Y_part, Y_pred, average='weighted'))
             print(clf_name, "-REC:", recall_score(Y_part, Y_pred, average='weighted'))
             print(clf_name, "-F-Score:", f1_score(Y_part, Y_pred, average='weighted'))
-            # # np.savetxt("D:\pythonProject\spark\superComputer\\true_values", Y_part)
-            # np.savetxt("D:\pythonProject\spark\superComputer\predict_values", Y_pred)
+            # np.savetxt("D:\pythonProject\spark\superComputer\\results\\true_values", Y_part)
+            # np.savetxt("D:\pythonProject\spark\superComputer\\results\predict_values", Y_pred)
             # for j in range(len(Y_part[:100])):
             #     Y_part_new = np.insert(Y_part, j, (Y_part[j] + 1) * 0.2)
             #     Y_pred_new = np.insert(Y_pred, j, (Y_pred[j] + 1) * 0.2)
