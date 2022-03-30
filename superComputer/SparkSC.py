@@ -48,9 +48,9 @@ spark = SparkSession.builder.master("local[*]").appName("SC").getOrCreate()
 sq = SQLContext(spark.sparkContext)
 
 
-def preprocessing(subt=False, rt=False, nap=False, wt=False):
+def preprocessing(subt=False, rt=False, wt=False, nap=False, rnp=False):
     schema = StructType([
-        StructField("Job_Number", FloatType(), nullable=True),
+        StructField("id", FloatType(), nullable=True),
         StructField("Submit_Time", FloatType(), nullable=True),
         StructField("Wait_Time", FloatType(), nullable=True),
         StructField("Run_Time", FloatType(), nullable=True),
@@ -67,6 +67,7 @@ def preprocessing(subt=False, rt=False, nap=False, wt=False):
     # sjtu_2019_df = spark.read.csv("D:\pythonProject\spark\datas\sc\ssc_2017_new.csv", schema=schema).cache()
     # sjtu_2019_df = sc.textFile("D:\pythonProject\spark\datas\sc\sjtu_2019_new.csv").cache()
     sjtu_2019_pd = sjtu_2019_df.toPandas().dropna()
+    print("初始数据集：", sjtu_2019_pd)
     # 1.得到标注（目标）
     label = sjtu_2019_pd["Status"]
 
@@ -79,23 +80,25 @@ def preprocessing(subt=False, rt=False, nap=False, wt=False):
     # Y = sjtu_2019_pd.loc[:, "Run_Time"]  # 目标
 
     # sjtu_2019_pd
-    X = sjtu_2019_pd.loc[:, ["Wait_Time", "NAP", "Run_Time", "User_ID", "Queue_Number", "Submit_Time"]]  # 特征
-    Y = sjtu_2019_pd.loc[:, "Status"]  # 目标
+    # X = sjtu_2019_pd.loc[:, ["Wait_Time", "NAP", "Run_Time", "User_ID", "Queue_Number", "Submit_Time"]]  # 特征
+    # Y = sjtu_2019_pd.loc[:, "Status"]  # 目标
 
     # 1.过滤思想
-    skb = SelectKBest(k=5)
-    skb.fit(X, Y)
+    # skb = SelectKBest(k=5)
+    # skb.fit(X, Y)
     # print("SelectKBest:", skb.transform(X))  # 留下了Submit_Time,Wait_Time和Run_Time，User_ID,Queue_Number去掉了NAP,RNP
 
     # 特征递归消除(RFE, recursive feature elimination)，SVR(kernel="linear")SVR()就是SVM算法来做回归用的方法（即输入标签是连续值的时候要用的方法）
-    lr = LinearRegression()
-    ref = RFE(estimator=lr, n_features_to_select=5, step=1)
+    # lr = LinearRegression()
+    # ref = RFE(estimator=lr, n_features_to_select=5, step=1)
     # ref = RFE(estimator=SVR(kernel="linear"), n_features_to_select=2, step=1)
     # print("REF:", ref.fit_transform(X, Y))  # 留下了NAP,Wait_Time,User_ID,Queue_Number，Run_Time去掉了Submit_Time
 
     # sjtu_2019
     sjtu_2019_test = sjtu_2019_pd.drop("Status", axis=1)  # 全特征
-    # sjtu_2019_test = sjtu_2019_pd.drop(["Status", "NAP", "RNP"], axis=1)
+    # print("测试集：",sjtu_2019_test)
+    # sjtu_2019_test = sjtu_2019_pd.drop(["id", "Status", "RNP"], axis=1)  # 去掉id和RNP重复列
+    print("测试集：", sjtu_2019_test)
 
     # tc4060_2017_new
     # sjtu_2019_test = sjtu_2019_pd.drop(["Run_Time", "Submit_Time", "RNP"], axis=1)
@@ -103,11 +106,10 @@ def preprocessing(subt=False, rt=False, nap=False, wt=False):
 
     # 4.特征处理 归一化，标准化
     # situ_2019
-    scaler_lst = [subt, rt, nap, wt]  # 全特征
-    # scaler_lst = [subt, rt, wt]
-    # scaler_lst = [subt, rt, wt]
-    column_lst = ["Submit_Time", "Run_Time", "NAP", "Wait_Time"]  # 全特征
-    # column_lst = ["Submit_Time", "Run_Time", "Wait_Time"]
+    scaler_lst = [subt, rt, wt, nap, rnp]  # 全特征
+    # scaler_lst = [subt, rt, wt, nap]
+    column_lst = ["Submit_Time", "Run_Time", "Wait_Time", "NAP", "RNP"]  # 全特征
+    # column_lst = ["Submit_Time", "Run_Time", "Wait_Time","NAP"]
 
     # tc4060_2017_new
     # column_lst = ["Wait_Time", "User_ID", "Wait_Time"]
@@ -118,7 +120,7 @@ def preprocessing(subt=False, rt=False, nap=False, wt=False):
         else:
             sjtu_2019_test[column_lst[i]] = \
                 StandardScaler().fit_transform(sjtu_2019_test[column_lst[i]].values.reshape(-1, 1)).reshape(1, -1)[0]
-    print("features：",sjtu_2019_test)
+    print("features：", sjtu_2019_test)
     return sjtu_2019_test, label
 
 
@@ -160,7 +162,9 @@ def modeling(features, label):
     #     print("NN", "-F-Score:", f1_score(Y_part, Y_pred, average='weighted'))
     # return
     models = []
-    models.append(("LGB", LGBMClassifier(boosting_type="goss", n_estimators=400, learning_rate=0.04)))
+    # models.append(("LGB", LGBMClassifier(boosting_type="goss", n_estimators=400, learning_rate=0.04)))
+    models.append(("LGB", LGBMClassifier(boosting_type="goss", n_estimators=400, learning_rate=0.12605847206065268,
+                                         num_leaves=31, min_child_samples=330, subsample_for_bin=280000)))
     # models.append(("KNN", KNeighborsClassifier(n_neighbors=3)))
     # 朴素贝叶斯【生产模型】不适合本实验的数据，对数据要求高
     # models.append(("GaussianNB", GaussianNB()))  # 贝叶斯算法适合离散值
@@ -284,7 +288,8 @@ def SparkMlib():
 def main():
     # features, label = preprocessing(subt=True,rt=True, wt=True)  # 标准化处理
     # features, label = preprocessing(subt=False, rt=False, wt=False)  # 标准化处理
-    features, label = preprocessing(subt=False, rt=False, nap=False, wt=False)  # 全特征标准化处理
+    # features, label = preprocessing(subt=False, rt=False, wt=False, nap=False, rnp=False)  # 全特征minmax归一化处理
+    features, label = preprocessing(subt=True, rt=True, wt=True, nap=True, rnp=True)  # 全特征z-score归一化标准化处理
     # features, label = preprocessing(rt=False, nap=False, wt=False)  # 归一化处理
     # print(preprocessing(rt=True, nap=True, wt=True))
     modeling(features, label)
