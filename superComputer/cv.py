@@ -45,6 +45,8 @@ for train_index, test_index in kf.split(features):
     print("train:", train_index, "test:", test_index)
     X_train, X_test = features[train_index], features[test_index]
     y_train, y_test = labels[train_index], labels[test_index]
+print("训练集：",X_train)
+print("训练集labels：",y_train)
 print("=================================================================")
 
 # lgbCV
@@ -72,3 +74,10 @@ print('best cv score is {}'.format(pd.Series(cv_result['auc-mean']).max()))
 # The ideal number of iteractions was 1000.
 # best n_estimator is 1000
 # best cv score is 0.9797873428836741
+
+# {'boosting_type': 'goss', 'num_leaves': 89, 'learning_rate': 0.041025916113156854, 'subsample_for_bin': 280000, 'min_child_samples': 365, 'reg_alpha': 0.4693877551020408, 'reg_lambda': 0.9387755102040816, 'colsample_bytree': 0.6888888888888889, 'verbose': -1}
+# {'boosting_type': 'goss', 'num_leaves': 89, 'learning_rate': 0.041025916113156854, 'subsample_for_bin': 280000, 'min_child_samples': 365, 'reg_alpha': 0.4693877551020408, 'reg_lambda': 0.9387755102040816, 'colsample_bytree': 0.6888888888888889, 'verbose': -1, 'subsample': 1.0}
+# the maximum ROC AUC on the validation set was0.97821 with std of 0.00202.
+# The ideal number of iteractions was 1000.
+# best n_estimator is 1000
+# best cv score is 0.9782078814290006
