@@ -10,11 +10,11 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.neighbors import NearestNeighbors, KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB, BernoulliNB
 from sklearn.tree import DecisionTreeClassifier, export_graphviz
-from sklearn.svm import SVC
+from sklearn.svm import SVC, LinearSVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.linear_model import LogisticRegression, LinearRegression
+from sklearn.linear_model import LogisticRegression, LinearRegression, SGDClassifier
 # from tensorflow.python.keras.models import Sequential
 # from tensorflow.python.keras.layers.core import Dense, Activation
 # from tensorflow.keras.optimizers import SGD
@@ -109,10 +109,91 @@ def preprocessing(subt=False, rt=False, wt=False, nap=False, rnp=False):
     scaler_lst = [subt, rt, wt, nap, rnp]  # 全特征
     # scaler_lst = [subt, rt, wt, nap]
     column_lst = ["Submit_Time", "Run_Time", "Wait_Time", "NAP", "RNP"]  # 全特征
+
     # column_lst = ["Submit_Time", "Run_Time", "Wait_Time","NAP"]
 
     # tc4060_2017_new
     # column_lst = ["Wait_Time", "User_ID", "Wait_Time"]
+    for i in range(len(scaler_lst)):
+        if not scaler_lst[i]:
+            sjtu_2019_test[column_lst[i]] = \
+                MinMaxScaler().fit_transform(sjtu_2019_test[column_lst[i]].values.reshape(-1, 1)).reshape(1, -1)[0]
+        else:
+            sjtu_2019_test[column_lst[i]] = \
+                StandardScaler().fit_transform(sjtu_2019_test[column_lst[i]].values.reshape(-1, 1)).reshape(1, -1)[0]
+    print("features：", sjtu_2019_test)
+    return sjtu_2019_test, label
+
+
+def SkbPreprocessing(subt=False, rt=False, wt=False, nap=False):
+    schema = StructType([
+        StructField("id", FloatType(), nullable=True),
+        StructField("Submit_Time", FloatType(), nullable=True),
+        StructField("Wait_Time", FloatType(), nullable=True),
+        StructField("Run_Time", FloatType(), nullable=True),
+        StructField("NAP", FloatType(), nullable=True),
+        StructField("RNP", FloatType(), nullable=True),
+        StructField("Status", FloatType(), nullable=True),
+        StructField("User_ID", FloatType(), nullable=True),
+        StructField("Queue_Number", FloatType(), nullable=True)]
+    )
+    sjtu_2019_df = spark.read.csv("D:\pythonProject\spark\datas\sc\sjtu_2019_new.csv", schema=schema).cache()
+    sjtu_2019_pd = sjtu_2019_df.toPandas().dropna()
+    print("初始数据集：", sjtu_2019_pd)
+    # 1.得到标注（目标）
+    label = sjtu_2019_pd["Status"]
+
+    # sjtu_2019
+    sjtu_2019_test = sjtu_2019_pd.drop(["Status", "RNP", "User_ID", "Queue_Number"], axis=1)  # SelectKBest选择的五个特征
+    print("测试集：", sjtu_2019_test)
+
+    # 4.特征处理 归一化，标准化
+    # situ_2019
+    # scaler_lst = [subt, rt, wt, nap, rnp]  # 全特征
+    scaler_lst = [subt, rt, wt, nap]  # # SelectKBest条件下
+    # column_lst = ["Submit_Time", "Run_Time", "Wait_Time", "NAP", "RNP"]  # 全特征
+    column_lst = ["Submit_Time", "Run_Time", "Wait_Time", "NAP"]  # # SelectKBest条件下
+
+    for i in range(len(scaler_lst)):
+        if not scaler_lst[i]:
+            sjtu_2019_test[column_lst[i]] = \
+                MinMaxScaler().fit_transform(sjtu_2019_test[column_lst[i]].values.reshape(-1, 1)).reshape(1, -1)[0]
+        else:
+            sjtu_2019_test[column_lst[i]] = \
+                StandardScaler().fit_transform(sjtu_2019_test[column_lst[i]].values.reshape(-1, 1)).reshape(1, -1)[0]
+    print("features：", sjtu_2019_test)
+    return sjtu_2019_test, label
+
+
+def REFPreprocessing(sub=False, rt=False, nap=False, rnp=False, wt=False, uid=False, que=False):
+    schema = StructType([
+        StructField("id", FloatType(), nullable=True),
+        StructField("Submit_Time", FloatType(), nullable=True),
+        StructField("Wait_Time", FloatType(), nullable=True),
+        StructField("Run_Time", FloatType(), nullable=True),
+        StructField("NAP", FloatType(), nullable=True),
+        StructField("RNP", FloatType(), nullable=True),
+        StructField("Status", FloatType(), nullable=True),
+        StructField("User_ID", FloatType(), nullable=True),
+        StructField("Queue_Number", FloatType(), nullable=True)]
+    )
+    sjtu_2019_df = spark.read.csv("D:\pythonProject\spark\datas\sc\sjtu_2019_new.csv", schema=schema).cache()
+    sjtu_2019_pd = sjtu_2019_df.toPandas().dropna()
+    print("初始数据集：", sjtu_2019_pd)
+    # 1.得到标注（目标）
+    label = sjtu_2019_pd["Status"]
+
+    # sjtu_2019
+    sjtu_2019_test = sjtu_2019_pd.drop(["Status", "id"], axis=1)  # ReliefF选择的五个特征
+    print("测试集：", sjtu_2019_test)
+
+    # 4.特征处理 归一化，标准化
+    # situ_2019
+    # scaler_lst = [subt, rt, wt, nap, rnp]  # 全特征
+    scaler_lst = [sub, rt, nap, rnp, wt, uid, que]  # # SelectKBest条件下
+    # column_lst = ["Submit_Time", "Run_Time", "Wait_Time", "NAP", "RNP"]  # 全特征
+    column_lst = ["Submit_Time", "Run_Time", "NAP", "RNP", "Wait_Time", "User_ID", "Queue_Number"]  # # ReliefF
+
     for i in range(len(scaler_lst)):
         if not scaler_lst[i]:
             sjtu_2019_test[column_lst[i]] = \
@@ -162,29 +243,31 @@ def modeling(features, label):
     #     print("NN", "-F-Score:", f1_score(Y_part, Y_pred, average='weighted'))
     # return
     models = []
-    # models.append(("LGB", LGBMClassifier(boosting_type="goss", n_estimators=400, learning_rate=0.04)))
-    models.append(("LGB", LGBMClassifier(boosting_type="goss", n_estimators=400, learning_rate=0.12605847206065268,
-                                         num_leaves=31, min_child_samples=330, subsample_for_bin=280000)))
-    # models.append(("KNN", KNeighborsClassifier(n_neighbors=3)))
+    models.append(("KNN", KNeighborsClassifier(n_neighbors=3)))
     # 朴素贝叶斯【生产模型】不适合本实验的数据，对数据要求高
     # models.append(("GaussianNB", GaussianNB()))  # 贝叶斯算法适合离散值
     # models.append(("BernoulliNB", BernoulliNB()))  # 伯努利贝叶斯是二值化
     # 决策树
-    # models.append(("DecisionTreeGini", DecisionTreeClassifier()))  # 适合连续值分类
-    # models.append(("DecisionTreeEntropy", DecisionTreeClassifier(criterion="entropy")))  # 适合离散值比较多的分类
+    models.append(("DecisionTreeGini", DecisionTreeClassifier()))  # 适合连续值分类
+    models.append(("DecisionTreeEntropy", DecisionTreeClassifier(criterion="entropy")))  # 适合离散值比较多的分类
     # SVM 效果不好
-    # models.append(("SVM Classifier",SVC()))
+    models.append(("SVM SGDClassifier", SGDClassifier()))
+    models.append(("SVM LinearSVC", LinearSVC()))
     # 集成方法
     # 随机森林 目前效果最好   接下来的工作是调参
-    # models.append(("RandomForest", RandomForestClassifier(n_estimators=100)))
+    models.append(("RandomForest", RandomForestClassifier(n_estimators=100)))
     # models.append(("RandomForest", RandomForest()))
-    # models.append(("RandomForestEntropy", RandomForestClassifier(n_estimators=100, criterion="entropy")))
+    models.append(("RandomForestEntropy", RandomForestClassifier(n_estimators=100, criterion="entropy")))
     # AdaBoost 效果不好，还出UndefinedMetricWarning警告，预测的值中不包含有实际值
     # models.append(("AdaBoost", AdaBoostClassifier(n_estimators=1000)))
     # 逻辑回归 效果不好,数据相关性不强
     # models.append(("LogisticRegression", LogisticRegression(max_iter=10000, C=1000, tol=1e-10,solver="sag")))
     # GBDT 效果还行
-    # models.append(("GBDT", GradientBoostingClassifier(max_depth=6, n_estimators=100)))
+    models.append(("GBDT", GradientBoostingClassifier(max_depth=6, n_estimators=100)))
+    # models.append(("LGBM", LGBMClassifier(boosting_type="goss", n_estimators=400, learning_rate=0.04)))
+    # models.append(("LGBM", LGBMClassifier(boosting_type="goss", n_estimators=400, learning_rate=0.12605847206065268,
+    #                                      num_leaves=31, min_child_samples=330, subsample_for_bin=280000)))
+    models.append(("LGBM无调参", LGBMClassifier(boosting_type="goss")))
     for clf_name, clf in models:
         clf.fit(X_train, Y_train)
         xy_lst = [(X_train, Y_train), (X_validation, Y_validation), (X_test, Y_test)]
@@ -200,45 +283,18 @@ def modeling(features, label):
             # 通过将样本数量作为权重，可理解为评价值的置信度，数量越多，其评价值越可信
             # https://blog.csdn.net/Urbanears/article/details/105033731
             print(clf_name, "-ACC:", accuracy_score(Y_part, Y_pred))
-            # print(clf_name, "-AUC:", roc_auc_score(Y_part, Y_pred))
+            # print(clf_name, "-AUC:", roc_auc_score(Y_part, Y_pred, multi_class='ovr'))
             print(clf_name, "-Precision:", precision_score(Y_part, Y_pred, average='weighted'))
             print(clf_name, "-REC:", recall_score(Y_part, Y_pred, average='weighted'))
             print(clf_name, "-F-Score:", f1_score(Y_part, Y_pred, average='weighted'))
-            # np.savetxt("D:\pythonProject\spark\superComputer\\results\\true_values", Y_part)
-            # np.savetxt("D:\pythonProject\spark\superComputer\\results\predict_values", Y_pred)
-            # for j in range(len(Y_part[:100])):
-            #     Y_part_new = np.insert(Y_part, j, (Y_part[j] + 1) * 0.2)
-            #     Y_pred_new = np.insert(Y_pred, j, (Y_pred[j] + 1) * 0.2)
-            # Plotting the results
-            # plt.figure(figsize=(6, 4), dpi=300)
-            # y_plot_part = pick_arange(Y_part,1000)
-            # y_plot_pred = pick_arange(Y_pred,1000)
-            # y_plot_pred = pick_arange(Y_pred,1000)
-            # y_plot_pred = pick_arange(Y_pred,1000)
-            # mask = Y_part != 0
-            # mask2 = Y_pred != 0
-            # y_plot_part = Y_part[mask]
-            # y_plot_pred = Y_pred[mask2]
-            # plt.plot(Y_part_new[:500])
-            # plt.plot(Y_pred_new[:500])
-            # plt.yticks(np.arange(0, 5, 0.25))
-            # plt.title(i)
-            # plt.xlabel('Hour')
-            # plt.ylabel('Electricity load')
-            # plt.legend(('Actual', 'Predicted'), fontsize='15')
-            # plt.show()
-            # fig.savefig('results/LSTM/final_output.jpg', bbox_inches='tight')
-
-            # # Plot of the loss
-            # loss_fig = plt.figure()
-            # plt.plot(history.history['loss'])
-            # plt.plot(history.history['val_loss'])
-            # plt.title('Model Loss')
-            # plt.ylabel('Loss')
-            # plt.xlabel('Epoch')
-            # plt.legend(['Train', 'Validation'], loc='upper left')
-            # plt.show()
-            # loss_fig.savefig('results/LSTM/final_loss.jpg', bbox_inches='tight')
+            np.savetxt("D:\pythonProject\spark\superComputer\\results\ReliefF\\true_values_" + str(i) + clf_name,
+                       Y_part)
+            np.savetxt("D:\pythonProject\spark\superComputer\\results\ReliefF\predict_values_" + str(i) + clf_name,
+                       Y_pred)
+            # np.savetxt("D:\pythonProject\spark\superComputer\\results\SelectKBest\\true_values_" + str(i) + clf_name,
+            #            Y_part)
+            # np.savetxt("D:\pythonProject\spark\superComputer\\results\SelectKBest\predict_values_" + str(i) + clf_name,
+            #            Y_pred)
 
 
 # 回归
@@ -275,7 +331,11 @@ def pick_arange(arange, num):
 
 # 聚类
 def cluster_test():
-    pass
+    Y_part = pd.read_csv('D:\pythonProject\spark\superComputer\\true_values')
+    Y_pred = pd.read_csv('D:\pythonProject\spark\superComputer\predict_values')
+    print(Y_part)
+    print("-AUC:", roc_auc_score(Y_part, Y_pred, multi_class='ovo'))
+    print("-ACC:", accuracy_score(Y_part, Y_pred))
 
 
 def SparkMlib():
@@ -286,15 +346,13 @@ def SparkMlib():
 
 
 def main():
-    # features, label = preprocessing(subt=True,rt=True, wt=True)  # 标准化处理
-    # features, label = preprocessing(subt=False, rt=False, wt=False)  # 标准化处理
     # features, label = preprocessing(subt=False, rt=False, wt=False, nap=False, rnp=False)  # 全特征minmax归一化处理
-    features, label = preprocessing(subt=True, rt=True, wt=True, nap=True, rnp=True)  # 全特征z-score归一化标准化处理
-    # features, label = preprocessing(rt=False, nap=False, wt=False)  # 归一化处理
-    # print(preprocessing(rt=True, nap=True, wt=True))
+    # features, label = preprocessing(subt=True, rt=True, wt=True, nap=True, rnp=True)  # 全特征z-score归一化标准化处理
+    # features, label = SkbPreprocessing(subt=True, rt=True, wt=True, nap=True)  # SKBz-score归一化标准化处理
+    features, label = REFPreprocessing(sub=False, rt=False, nap=False, rnp=False, wt=False, uid=False,
+                                       que=False)  # ReliefF minmax归一化标准化处理
     modeling(features, label)
-    # regr_test(features[["NAP", "Wait_Time"]], features["Run_Time"])
-    # SparkMlib()
+    # cluster_test()
 
 
 if __name__ == '__main__':
