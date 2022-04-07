@@ -58,6 +58,7 @@ print(params)
 
 cv_result = lgb.cv(params, train_data, num_boost_round=1000, nfold=10, metrics='auc', early_stopping_rounds=100,
                    verbose_eval=False, seed=50)
+
 # 最高分
 cv_results_best = np.max(cv_result['auc-mean'])
 # 最高分的标准差

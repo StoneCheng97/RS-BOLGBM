@@ -33,11 +33,14 @@ path9 = "D:\pythonProject\spark\datas\sc//tc4060.csv"
 path10 = "D:\pythonProject\spark\datas\sc//tc4060_2018.csv"
 path11 = "D:\pythonProject\spark\datas\sc\wxsc_2017.csv"
 
+# sjtu_2019 = pd.read_csv(path4).drop(
+#     ['Job_Number', 'RM', 'RT', 'ACTU', 'Used_Memory', 'Executable (Application) Number', 'Group_ID',
+#      'Partition_Number',
+#      'Preceding Job Number', 'Think Time from Preceding Job'], axis=1)
 sjtu_2019 = pd.read_csv(path4).drop(
     ['Job_Number', 'RM', 'RT', 'ACTU', 'Used_Memory', 'Executable (Application) Number', 'Group_ID',
      'Partition_Number',
      'Preceding Job Number', 'Think Time from Preceding Job'], axis=1)
-ssc_2019 = pd.read_csv(path5)
 ssc_2018 = pd.read_csv(path6).drop(
     ['Job_Number', 'RM', 'RT', 'ACTU', 'Used_Memory', 'Executable (Application) Number', 'Group_ID',
      'Partition_Number',

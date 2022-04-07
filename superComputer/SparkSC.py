@@ -190,7 +190,7 @@ def REFPreprocessing(sub=False, rt=False, nap=False, rnp=False, wt=False, uid=Fa
     # 4.特征处理 归一化，标准化
     # situ_2019
     # scaler_lst = [subt, rt, wt, nap, rnp]  # 全特征
-    scaler_lst = [sub, rt, nap, rnp, wt, uid, que]  # # SelectKBest条件下
+    scaler_lst = [sub, rt, nap, rnp, wt, uid, que]  # # ReliefF条件下
     # column_lst = ["Submit_Time", "Run_Time", "Wait_Time", "NAP", "RNP"]  # 全特征
     column_lst = ["Submit_Time", "Run_Time", "NAP", "RNP", "Wait_Time", "User_ID", "Queue_Number"]  # # ReliefF
 
@@ -287,14 +287,14 @@ def modeling(features, label):
             print(clf_name, "-Precision:", precision_score(Y_part, Y_pred, average='weighted'))
             print(clf_name, "-REC:", recall_score(Y_part, Y_pred, average='weighted'))
             print(clf_name, "-F-Score:", f1_score(Y_part, Y_pred, average='weighted'))
-            np.savetxt("D:\pythonProject\spark\superComputer\\results\ReliefF\\true_values_" + str(i) + clf_name,
-                       Y_part)
-            np.savetxt("D:\pythonProject\spark\superComputer\\results\ReliefF\predict_values_" + str(i) + clf_name,
-                       Y_pred)
-            # np.savetxt("D:\pythonProject\spark\superComputer\\results\SelectKBest\\true_values_" + str(i) + clf_name,
+            # np.savetxt("D:\pythonProject\spark\superComputer\\results\ReliefF\\true_values_" + str(i) + clf_name,
             #            Y_part)
-            # np.savetxt("D:\pythonProject\spark\superComputer\\results\SelectKBest\predict_values_" + str(i) + clf_name,
+            # np.savetxt("D:\pythonProject\spark\superComputer\\results\ReliefF\predict_values_" + str(i) + clf_name,
             #            Y_pred)
+            np.savetxt("D:\pythonProject\spark\superComputer\\results\SelectKBest\\true_values_" + str(i) + clf_name,
+                       Y_part)
+            np.savetxt("D:\pythonProject\spark\superComputer\\results\SelectKBest\predict_values_" + str(i) + clf_name,
+                       Y_pred)
 
 
 # 回归
@@ -350,7 +350,7 @@ def main():
     # features, label = preprocessing(subt=True, rt=True, wt=True, nap=True, rnp=True)  # 全特征z-score归一化标准化处理
     # features, label = SkbPreprocessing(subt=True, rt=True, wt=True, nap=True)  # SKBz-score归一化标准化处理
     features, label = REFPreprocessing(sub=False, rt=False, nap=False, rnp=False, wt=False, uid=False,
-                                       que=False)  # ReliefF minmax归一化标准化处理
+                                       que=False)  # ReliefF minmax归一化标准化处理 效果好
     modeling(features, label)
     # cluster_test()
 
