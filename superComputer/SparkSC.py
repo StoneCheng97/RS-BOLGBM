@@ -347,10 +347,13 @@ def SparkMlib():
 
 def main():
     # features, label = preprocessing(subt=False, rt=False, wt=False, nap=False, rnp=False)  # 全特征minmax归一化处理
-    # features, label = preprocessing(subt=True, rt=True, wt=True, nap=True, rnp=True)  # 全特征z-score归一化标准化处理
+    features, label = preprocessing(subt=True, rt=True, wt=True, nap=True, rnp=True)  # 全特征z-score归一化标准化处理
     # features, label = SkbPreprocessing(subt=True, rt=True, wt=True, nap=True)  # SKBz-score归一化标准化处理
-    features, label = REFPreprocessing(sub=False, rt=False, nap=False, rnp=False, wt=False, uid=False,
-                                       que=False)  # ReliefF minmax归一化标准化处理 效果好
+    # features, label = SkbPreprocessing(subt=False, rt=False, wt=False, nap=False)  # SKB minmax归一化标准化处理
+    # features, label = REFPreprocessing(sub=False, rt=False, nap=False, rnp=False, wt=False, uid=False,
+    #                                    que=False)  # ReliefF minmax归一化标准化处理 效果好
+    # features, label = REFPreprocessing(sub=True, rt=True, nap=True, rnp=True, wt=True, uid=True,
+    #                                    que=True)  # ReliefF z-score归一化标准化处理
     modeling(features, label)
     # cluster_test()
 

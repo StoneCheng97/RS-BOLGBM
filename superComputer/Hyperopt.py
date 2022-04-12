@@ -11,7 +11,7 @@ from sklearn.preprocessing import normalize, scale
 from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
 
-data = pd.read_csv("D:\pythonProject\spark\datas\sc\sjtu_2019_new.csv")
+data = pd.read_csv("D:\pythonProject\spark\datas\sc\sjtu_2019_new.csv").loc[120000:125000]
 test_data = data.dropna()
 # X = test_data.drop(labels='Status', axis=1).values # 全特征
 X = test_data.drop(labels=['Status', 'RNP', 'User_ID', 'Queue_Number'], axis=1).values  # SelectKBest选择的特征
@@ -82,27 +82,28 @@ space4GDBT = {
 
 }
 
-best = 0
+
+# best = 0
 
 
 def f(params):
-    global best
+    # global best
     # acc = hyperopt_train_test_KNN(params)
     # acc = hyperopt_train_test_DT(params)
     acc = hyperopt_train_test_RF(params)
     # acc = hyperopt_train_test_SVM(params)
     # acc = hyperopt_train_test_GDBT(params)
-    if acc > best:
-        best = acc
-    print('new best:', best, params)
-
+    # if acc > best:
+    #     best = acc
+    # print('new best:', best, params)
+    #
     return {'loss': -acc, 'status': STATUS_OK}
 
 
 trials = Trials()
 # best = fmin(f, space4knn, algo=tpe.suggest, max_evals=100, trials=trials)
-# best = fmin(f, space4DT, algo=tpe.suggest, max_evals=300, trials=trials)
-best = fmin(f, space4RF, algo=tpe.suggest, max_evals=300, trials=trials)
+# best = fmin(f, space4DT, algo=tpe.suggest, max_evals=100, trials=trials)
+best = fmin(f, space4RF, algo=tpe.suggest, max_evals=100, trials=trials)
 # best = fmin(f, space4SVM, algo=tpe.suggest, max_evals=100, trials=trials)
 # best = fmin(f, space4GDBT, algo=tpe.suggest, max_evals=100, trials=trials)
 # best = fmin(f, space4knn, algo=tpe.suggest, max_evals=100, trials=trials)
