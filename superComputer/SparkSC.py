@@ -243,31 +243,38 @@ def modeling(features, label):
     #     print("NN", "-F-Score:", f1_score(Y_part, Y_pred, average='weighted'))
     # return
     models = []
-    models.append(("KNN", KNeighborsClassifier(n_neighbors=3)))
+    models.append(("KNN,SKB调参", KNeighborsClassifier(n_neighbors=9)))
+    # models.append(("KNN", KNeighborsClassifier(n_neighbors=9)))
     # 朴素贝叶斯【生产模型】不适合本实验的数据，对数据要求高
     # models.append(("GaussianNB", GaussianNB()))  # 贝叶斯算法适合离散值
     # models.append(("BernoulliNB", BernoulliNB()))  # 伯努利贝叶斯是二值化
     # 决策树
-    models.append(("DecisionTreeGini", DecisionTreeClassifier()))  # 适合连续值分类
-    models.append(("DecisionTreeEntropy", DecisionTreeClassifier(criterion="entropy")))  # 适合离散值比较多的分类
+    # models.append(("DecisionTreeGini", DecisionTreeClassifier()))  # 适合连续值分类
+    # models.append(("DecisionTreeEntropy",
+    # DecisionTreeClassifier(criterion="entropy", splitter='best', max_depth=30,
+    #                        max_features=5)))  # 适合离散值比较多的分类
     # SVM 效果不好
-    models.append(("SVM SGDClassifier", SGDClassifier()))
-    models.append(("SVM LinearSVC", LinearSVC()))
+    # models.append(("SVM SGDClassifier", SGDClassifier()))
+    # models.append(("SVM LinearSVC", LinearSVC(dual=False, max_iter=2557)))
     # 集成方法
     # 随机森林 目前效果最好   接下来的工作是调参
-    models.append(("RandomForest", RandomForestClassifier(n_estimators=100)))
+    # models.append(("RandomForest", RandomForestClassifier(n_estimators=100)))
     # models.append(("RandomForest", RandomForest()))
-    models.append(("RandomForestEntropy", RandomForestClassifier(n_estimators=100, criterion="entropy")))
+    # models.append(("RandomForestEntropy",
+    # RandomForestClassifier(n_estimators=171, criterion="entropy", max_depth=None, max_features=5)))
     # AdaBoost 效果不好，还出UndefinedMetricWarning警告，预测的值中不包含有实际值
     # models.append(("AdaBoost", AdaBoostClassifier(n_estimators=1000)))
     # 逻辑回归 效果不好,数据相关性不强
     # models.append(("LogisticRegression", LogisticRegression(max_iter=10000, C=1000, tol=1e-10,solver="sag")))
     # GBDT 效果还行
-    models.append(("GBDT", GradientBoostingClassifier(max_depth=6, n_estimators=100)))
+    models.append(("GBDT,SKB调参", GradientBoostingClassifier(max_depth=6, n_estimators=312, learning_rate=0.08452088679707226,
+                                                  criterion='friedman_mse')))  # learning_rate=0.12605847206065268
+    # models.append(("GBDT", GradientBoostingClassifier(max_depth=6, n_estimators=312, learning_rate=0.08452088679707226,
+    #                                                   criterion='friedman_mse')))# learning_rate=0.12605847206065268
     # models.append(("LGBM", LGBMClassifier(boosting_type="goss", n_estimators=400, learning_rate=0.04)))
-    # models.append(("LGBM", LGBMClassifier(boosting_type="goss", n_estimators=400, learning_rate=0.12605847206065268,
-    #                                      num_leaves=31, min_child_samples=330, subsample_for_bin=280000)))
-    models.append(("LGBM无调参", LGBMClassifier(boosting_type="goss")))
+    models.append(("LGBM,SKB调参", LGBMClassifier(boosting_type="goss", n_estimators=400, learning_rate=0.04,
+                                                num_leaves=31, min_child_samples=330, subsample_for_bin=280000)))
+    # models.append(("LGBM无调参", LGBMClassifier(boosting_type="goss")))
     for clf_name, clf in models:
         clf.fit(X_train, Y_train)
         xy_lst = [(X_train, Y_train), (X_validation, Y_validation), (X_test, Y_test)]
@@ -347,8 +354,8 @@ def SparkMlib():
 
 def main():
     # features, label = preprocessing(subt=False, rt=False, wt=False, nap=False, rnp=False)  # 全特征minmax归一化处理
-    features, label = preprocessing(subt=True, rt=True, wt=True, nap=True, rnp=True)  # 全特征z-score归一化标准化处理
-    # features, label = SkbPreprocessing(subt=True, rt=True, wt=True, nap=True)  # SKBz-score归一化标准化处理
+    # features, label = preprocessing(subt=True, rt=True, wt=True, nap=True, rnp=True)  # 全特征z-score归一化标准化处理
+    features, label = SkbPreprocessing(subt=True, rt=True, wt=True, nap=True)  # SKBz-score归一化标准化处理
     # features, label = SkbPreprocessing(subt=False, rt=False, wt=False, nap=False)  # SKB minmax归一化标准化处理
     # features, label = REFPreprocessing(sub=False, rt=False, nap=False, rnp=False, wt=False, uid=False,
     #                                    que=False)  # ReliefF minmax归一化标准化处理 效果好
