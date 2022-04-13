@@ -15,10 +15,10 @@ from sklearn.tree import DecisionTreeClassifier
 raw_data = pd.read_csv("D:\pythonProject\spark\datas\sc\sjtu_2019_new.csv")
 test_data = raw_data.dropna()
 # 全特征
-# train_features, train_labels = test_data.drop(labels=['Status'], axis=1).values, test_data['Status'].values
+train_features, train_labels = test_data.drop(labels=['Status'], axis=1).values, test_data['Status'].values
 # SelectKBest选择的特征
-train_features, train_labels = test_data.drop(labels=['Status', 'RNP', 'User_ID', 'Queue_Number'], axis=1).values, \
-                               test_data['Status'].values
+# train_features, train_labels = test_data.drop(labels=['Status', 'RNP', 'User_ID', 'Queue_Number'], axis=1).values, \
+#                                test_data['Status'].values
 # ReliefF选择的特征
 # train_features, train_labels = test_data.drop(labels=['id', 'Submit_Time', 'Run_Time', 'Status'], axis=1).values, \
 #                                test_data['Status'].values
@@ -28,7 +28,7 @@ lgb_param = dict(class_weight=[None, 'balanced'], boosting_type=['gbdt', 'goss',
                  learning_rate=list(np.logspace(np.log(0.005), np.log(0.2), base=np.exp(1), num=1000)),
                  subsample_for_bin=list(range(20000, 300000, 20000)),
                  min_child_samples=list(range(20, 500, 5)),
-                 # n_estimators=np.array([(100,500) for i in range(500)])
+                 n_estimators=sp_randint(100, 500)
                  # reg_lambda=list(np.linspace(0, 1)),
                  # reg_alpha=list(np.linspace(0, 1)),
                  # colsample_bytree=list(np.linspace(0.6, 1, 10))
@@ -120,8 +120,8 @@ def lightGBM(params):
 
 
 if __name__ == '__main__':
-    # KNN(knn_param)
-    # DT(DT_param)
-    # RF(RF_param)
-    GDBT(GDBT_param)
-    lightGBM(lgb_param)
+    KNN(knn_param)
+    DT(DT_param)
+    RF(RF_param)
+    # GDBT(GDBT_param)
+    # lightGBM(lgb_param)
