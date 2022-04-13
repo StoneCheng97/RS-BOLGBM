@@ -53,7 +53,9 @@ RF_param = dict(
 
 )
 SVM_param = dict(
-    # C = list(range())
+    kernel=['linear', 'poly', 'rbf', 'sigmoid', 'precomputed'],
+    C=[1e-3, 1e-2, 1e-1, 1, 10, 100, 1000],
+    gamma=['scale', 'auto']
 
 )
 GDBT_param = dict(
