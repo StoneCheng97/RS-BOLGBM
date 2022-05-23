@@ -8,13 +8,14 @@ from sklearn.pipeline import make_pipeline
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
 
-np.set_printoptions(suppress=False)
+np.set_printoptions(suppress=True)
 pd.set_option('display.float_format', lambda x: '%.5f' % x)  # 小数点后面保留5位小数，诸如此类，按需修改吧
 pd.set_option('display.max_columns', 1000)
 pd.set_option('display.max_rows', 1000)
 pd.set_option('display.width', 1000)
 pd.set_option('display.max_colwidth', None)
 raw_data = pd.read_csv("D:\pythonProject\spark\datas\sc\sjtu_2019_new.csv")
+# raw_data = pd.read_csv("D:\pythonProject\spark\datas\sc\sjtu-2019.csv")
 test_data = raw_data.dropna()
 # features = test_data.loc[:, ["Wait_Time", "NAP", "Run_Time", "User_ID", "Queue_Number", "Submit_Time"]]
 # labels = test_data.loc[:, "Status"]
@@ -41,14 +42,17 @@ skb = SelectKBest(score_func=chi2, k=5)  # 去掉了Queue_Number
 skb.fit(features, labels)
 print("SelectKBest:", skb.transform(features))
 print("SelectKBest Scores:", skb.scores_)
+
+
 # SelectKBest Scores: [6.28210292e+09 5.02352322e+07 1.47366457e+09 2.12300444e+06
 #  6.71196507e+04 1.59312948e+03]
 # 也是按原数据顺序排列的，但是选择出来的特征不是按分数高低排列的
 # SelectKBest Scores: [1.01201681e+08 6.28210292e+09 5.02352322e+07 1.47366457e+09 2.12300444e+06 2.12300444e+06 6.71196507e+04 1.59312948e+03]
 
-#[1.59312948e+03 6.71196507e+04 2.12300444e+06 2.12300444e+06 5.02352322e+07 1.01201681e+08 1.47366457e+09 6.28210292e+09]
+# [1.59312948e+03 6.71196507e+04 2.12300444e+06 2.12300444e+06 5.02352322e+07 1.01201681e+08 1.47366457e+09 6.28210292e+09]
 
 
 # a = [1.01201681e+08, 6.28210292e+09, 5.02352322e+07, 1.47366457e+09, 2.12300444e+06, 2.12300444e+06, 6.71196507e+04,
 #      1.59312948e+03]
 # print(sort(a))
+

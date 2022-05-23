@@ -14,7 +14,8 @@ from sklearn.tree import DecisionTreeClassifier
 data = pd.read_csv("D:\pythonProject\spark\datas\sc\sjtu_2019_new.csv").loc[120000:125000]
 test_data = data.dropna()
 # X = test_data.drop(labels='Status', axis=1).values # 全特征
-X = test_data.drop(labels=['Status', 'RNP', 'User_ID', 'Queue_Number'], axis=1).values  # SelectKBest选择的特征
+# X = test_data.drop(labels=['Status', 'RNP', 'User_ID', 'Queue_Number'], axis=1).values  # SelectKBest选择的特征
+X = test_data.drop(labels=['Status', 'RNP', 'User_ID', 'Queue_Number'], axis=1).values  # ReliefF选择的特征
 y = test_data['Status'].values
 print(test_data)
 print(X)

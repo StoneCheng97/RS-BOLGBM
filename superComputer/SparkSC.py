@@ -21,7 +21,7 @@ from sklearn.linear_model import LogisticRegression, LinearRegression, SGDClassi
 from six import StringIO
 import lightgbm as lgb
 from lightgbm import LGBMClassifier
-from sklearn.metrics import precision_score, accuracy_score, recall_score, f1_score, roc_auc_score
+from sklearn.metrics import precision_score, accuracy_score, recall_score, f1_score, roc_auc_score, roc_curve
 # from tensorflow.python.keras.layers import Dropout
 
 from pyspark import SparkContext
@@ -205,6 +205,46 @@ def REFPreprocessing(sub=False, rt=False, nap=False, rnp=False, wt=False, uid=Fa
     return sjtu_2019_test, label
 
 
+def RSPreprocessing(subt=False, rt=False, nap=False):
+    schema = StructType([
+        StructField("id", FloatType(), nullable=True),
+        StructField("Submit_Time", FloatType(), nullable=True),
+        StructField("Wait_Time", FloatType(), nullable=True),
+        StructField("Run_Time", FloatType(), nullable=True),
+        StructField("NAP", FloatType(), nullable=True),
+        StructField("RNP", FloatType(), nullable=True),
+        StructField("Status", FloatType(), nullable=True),
+        StructField("User_ID", FloatType(), nullable=True),
+        StructField("Queue_Number", FloatType(), nullable=True)]
+    )
+    sjtu_2019_df = spark.read.csv("D:\pythonProject\spark\datas\sc\sjtu_2019_new.csv", schema=schema).cache()
+    sjtu_2019_pd = sjtu_2019_df.toPandas().dropna()
+    print("初始数据集：", sjtu_2019_pd)
+    # 1.得到标注（目标）
+    label = sjtu_2019_pd["Status"]
+
+    # sjtu_2019
+    sjtu_2019_test = sjtu_2019_pd.drop(["Status", "RNP", "Wait_Time", "id"], axis=1)  # RS选择的五个特征
+    print("测试集：", sjtu_2019_test)
+
+    # 4.特征处理 归一化，标准化
+    # situ_2019
+    # scaler_lst = [subt, rt, wt, nap, rnp]  # 全特征
+    scaler_lst = [subt, rt, nap]  # # RS条件下
+    # column_lst = ["Submit_Time", "Run_Time", "Wait_Time", "NAP", "RNP"]  # 全特征
+    column_lst = ["Submit_Time", "Run_Time", "NAP"]  # # SelectKBest条件下
+
+    for i in range(len(scaler_lst)):
+        if not scaler_lst[i]:
+            sjtu_2019_test[column_lst[i]] = \
+                MinMaxScaler().fit_transform(sjtu_2019_test[column_lst[i]].values.reshape(-1, 1)).reshape(1, -1)[0]
+        else:
+            sjtu_2019_test[column_lst[i]] = \
+                StandardScaler().fit_transform(sjtu_2019_test[column_lst[i]].values.reshape(-1, 1)).reshape(1, -1)[0]
+    print("features：", sjtu_2019_test)
+    return sjtu_2019_test, label
+
+
 def modeling(features, label):
     from sklearn.model_selection import train_test_split
     f_v = features.values
@@ -243,22 +283,29 @@ def modeling(features, label):
     #     print("NN", "-F-Score:", f1_score(Y_part, Y_pred, average='weighted'))
     # return
     models = []
-    models.append(("KNN,SKB调参", KNeighborsClassifier(n_neighbors=9)))
+    # models.append(
+    #     ("KNN,SKB调参", KNeighborsClassifier(n_neighbors=15, weights='distance', algorithm='kd_tree', leaf_size=40)))
     # models.append(("KNN", KNeighborsClassifier(n_neighbors=9)))
     # 朴素贝叶斯【生产模型】不适合本实验的数据，对数据要求高
     # models.append(("GaussianNB", GaussianNB()))  # 贝叶斯算法适合离散值
     # models.append(("BernoulliNB", BernoulliNB()))  # 伯努利贝叶斯是二值化
     # 决策树
     # models.append(("DecisionTreeGini", DecisionTreeClassifier()))  # 适合连续值分类
-    # models.append(("DecisionTreeEntropy",
-    # DecisionTreeClassifier(criterion="entropy", splitter='best', max_depth=30,
-    #                        max_features=5)))  # 适合离散值比较多的分类
+    # models.append(("DecisionTreeEntropy,SKB调参",
+    #                DecisionTreeClassifier(criterion="entropy", splitter='best', max_depth=40,
+    #                                       max_features=None)))  # 适合离散值比较多的分类
     # SVM 效果不好
     # models.append(("SVM SGDClassifier", SGDClassifier()))
-    # models.append(("SVM LinearSVC", LinearSVC(dual=False, max_iter=2557)))
+    # models.append(("SVM LinearSVC", LinearSVC()))
     # 集成方法
     # 随机森林 目前效果最好   接下来的工作是调参
-    # models.append(("RandomForest", RandomForestClassifier(n_estimators=100)))
+    # models.append(
+        # ("RandomForest", RandomForestClassifier()))
+        # (
+        # "RandomForest,SKB调参", RandomForestClassifier(n_estimators=400, max_depth=30, criterion='gini', bootstrap=True)))
+    # ("RandomForest,REF调参", RandomForestClassifier(n_estimators=130, max_depth=32, criterion='gini', bootstrap=False)))
+    # ("RandomForest,REF调参",
+    #  RandomForestClassifier(n_estimators=211, max_depth=20, criterion='gini', bootstrap=False)))
     # models.append(("RandomForest", RandomForest()))
     # models.append(("RandomForestEntropy",
     # RandomForestClassifier(n_estimators=171, criterion="entropy", max_depth=None, max_features=5)))
@@ -267,13 +314,22 @@ def modeling(features, label):
     # 逻辑回归 效果不好,数据相关性不强
     # models.append(("LogisticRegression", LogisticRegression(max_iter=10000, C=1000, tol=1e-10,solver="sag")))
     # GBDT 效果还行
-    models.append(("GBDT,SKB调参", GradientBoostingClassifier(max_depth=6, n_estimators=312, learning_rate=0.08452088679707226,
-                                                  criterion='friedman_mse')))  # learning_rate=0.12605847206065268
-    # models.append(("GBDT", GradientBoostingClassifier(max_depth=6, n_estimators=312, learning_rate=0.08452088679707226,
-    #                                                   criterion='friedman_mse')))# learning_rate=0.12605847206065268
+    # models.append(("GBDT,SKB调参", GradientBoostingClassifier()))
+    # models.append(("GBDT,SKB调参", GradientBoostingClassifier(max_depth=6, n_estimators=312, learning_rate=0.08452088679707226,
+    #                                               criterion='friedman_mse')))  # learning_rate=0.12605847206065268
+    # models.append(("GBDT,REF调参", GradientBoostingClassifier(max_depth=10, n_estimators=283, learning_rate=0.13824951937907706,
+    #                                               criterion='friedman_mse')))  # learning_rate=0.12605847206065268
+    # models.append(("GBDT", GradientBoostingClassifier(max_depth=10, n_estimators=279, learning_rate=0.015477153246310426,
+    #                                                   criterion='friedman_mse')))  # learning_rate=0.12605847206065268
     # models.append(("LGBM", LGBMClassifier(boosting_type="goss", n_estimators=400, learning_rate=0.04)))
-    models.append(("LGBM,SKB调参", LGBMClassifier(boosting_type="goss", n_estimators=400, learning_rate=0.04,
-                                                num_leaves=31, min_child_samples=330, subsample_for_bin=280000)))
+    # models.append(
+    #     ("LGBM,SKB调参", LGBMClassifier(boosting_type="dart", n_estimators=400, learning_rate=0.19706765150537875,
+    #                                   num_leaves=31, min_child_samples=330, subsample_for_bin=20000)))
+    models.append(
+        ("LGBM,REF调参", LGBMClassifier(boosting_type="goss", n_estimators=383, learning_rate=0.048021192742094972,
+                                      num_leaves=35, min_child_samples=200, subsample_for_bin=140000)))
+    # models.append(("LGBM调参", LGBMClassifier(boosting_type="goss", n_estimators=227, learning_rate=0.17575260374540685,
+    #                                         num_leaves=146, min_child_samples=225, subsample_for_bin=80000)))
     # models.append(("LGBM无调参", LGBMClassifier(boosting_type="goss")))
     for clf_name, clf in models:
         clf.fit(X_train, Y_train)
@@ -283,6 +339,7 @@ def modeling(features, label):
             # print(X_part)
             Y_part = xy_lst[i][1]  # 真实label
             Y_pred = clf.predict(X_part)  # 预测label
+            # Y_pred2 = clf.predict_proba(X_part)  # 预测label
             print(i)  # 0表示训练集，1表示验证集，2表示测试集
 
             # 对于类别不均衡的分类模型，采用macro方式会有较大的偏差，采用weighted方式则可较好反映模型的优劣，
@@ -298,10 +355,14 @@ def modeling(features, label):
             #            Y_part)
             # np.savetxt("D:\pythonProject\spark\superComputer\\results\ReliefF\predict_values_" + str(i) + clf_name,
             #            Y_pred)
-            np.savetxt("D:\pythonProject\spark\superComputer\\results\SelectKBest\\true_values_" + str(i) + clf_name,
-                       Y_part)
-            np.savetxt("D:\pythonProject\spark\superComputer\\results\SelectKBest\predict_values_" + str(i) + clf_name,
-                       Y_pred)
+            # np.savetxt("D:\pythonProject\spark\superComputer\\results\SelectKBest\\true_values_" + str(i) + clf_name,
+            #            Y_part)
+            # np.savetxt("D:\pythonProject\spark\superComputer\\results\SelectKBest\predict_values_" + str(i) + clf_name,
+            #            Y_pred)
+            # np.savetxt("D:\pythonProject\spark\superComputer\\results\\full\\true_values_" + str(i) + clf_name,
+            #            Y_part)
+            # np.savetxt("D:\pythonProject\spark\superComputer\\results\\full\predict_values_" + str(i) + clf_name,
+            #            Y_pred)
 
 
 # 回归
@@ -355,7 +416,8 @@ def SparkMlib():
 def main():
     # features, label = preprocessing(subt=False, rt=False, wt=False, nap=False, rnp=False)  # 全特征minmax归一化处理
     # features, label = preprocessing(subt=True, rt=True, wt=True, nap=True, rnp=True)  # 全特征z-score归一化标准化处理
-    features, label = SkbPreprocessing(subt=True, rt=True, wt=True, nap=True)  # SKBz-score归一化标准化处理
+    features, label = RSPreprocessing(subt=True, rt=True, nap=True)  # 全特征z-score归一化标准化处理
+    # features, label = SkbPreprocessing(subt=True, rt=True, wt=True, nap=True)  # SKBz-score归一化标准化处理
     # features, label = SkbPreprocessing(subt=False, rt=False, wt=False, nap=False)  # SKB minmax归一化标准化处理
     # features, label = REFPreprocessing(sub=False, rt=False, nap=False, rnp=False, wt=False, uid=False,
     #                                    que=False)  # ReliefF minmax归一化标准化处理 效果好
