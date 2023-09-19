@@ -195,36 +195,70 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 # plt.savefig('E:\paper\\2203\\figures\\allSKB.png', bbox_inches='tight', dpi=128)
 
 # 对比柱状图
+# from pylab import mpl
+# mpl.rcParams["font.sans-serif"] = ["SimHei"]
 # labels = ['ACC', 'Precision', 'Recall', 'F-score']
-# #
-# labels = ['BO(TPE)', 'Random Search', 'Grind']
-# auc = [0.9647, 0.9191738462436064, 0.8934635057080068]
+#
+# # labels = ['BO(TPE)', 'Random Search', 'Grid Search']
+# labels = ['TPE贝叶斯', '随机搜索', '网格搜索']
+
+# SJTU 贝叶斯调参
+# auc = [0.9592, 0.9065, 0.8834]
+# aucc = [0.9647, 0.9191738462436064, 0.8934635057080068]
 # pre = [0.9636, 0.918771227240777, 0.8944759668685239]
 # rec = [0.9647, 0.9191738462436064, 0.8934635057080068]
 # f = [0.9641, 0.9178850186107028, 0.8883358806694086]
-# y = [12.25, 24.4, 54.2]
+# y = [11.25, 23.4, 67.35]
+
+#USTC 贝叶斯调参
+# auc = [0.9081, 0.8665, 0.8434]
+# aucc = [0.9589, 0.9021738462436064, 0.8934592154080068]
+# pre = [0.9547, 0.892771227240777, 0.8944759668685239]
+# rec = [0.9589, 0.9021738462436064, 0.8934592154080068]
+# f = [0.9568, 0.8974479094582101, 0.8939673020384302]
+# y = [10.37, 21.44, 62.55]
+
+#SSC 贝叶斯调参
+# auc = [0.9443, 0.8865, 0.8434]
+# aucc = [0.9566, 0.9065412462436064, 0.9075612154080068]
+# pre = [0.9496, 0.912771227240777, 0.9044458968685239]
+# rec = [0.9566, 0.9065412462436064, 0.9075612154080068]
+# f = [0.9531, 0.9096455698930961, 0.9060008781108071]
+# y = [9.87, 18.44, 59.68]
+
+#WXSC 贝叶斯调参
+# auc = [0.9618, 0.9144, 0.8789]
+# aucc = [0.9391, 0.8942134662436064, 0.8845262154080068]
+# pre = [0.9387, 0.909764327240777, 0.89645158968685239]
+# rec = [0.9391, 0.8942134662436064, 0.8845262154080068]
+# f = [0.9389, 0.9019218700640844, 0.8904489765721356]
+# y = [7.39, 12.84, 45.68]
 # x = np.arange(len(labels))  # the label locations
 # width = 0.1  # the width of the bars
 # fig, ax = plt.subplots(figsize=(10, 7), dpi=200)
 # ax2 = plt.twinx()
-# ax2.set_ylabel("Running Time/(min)")
-# plt.plot(y, "red", marker="o", linestyle="dashed", label="Running time")
+# # ax2.set_ylabel("Running Time/(min)")
+# ax2.set_ylabel("运行时间/(min)")
+# # plt.plot(y, "red", marker="o", linestyle="dashed", label="Running time")
+# plt.plot(y, "red", marker="o", linestyle="dashed", label="运行时间")
 # for a, b in zip(x, y):
 #     plt.text(a, b, b, ha='right', va='bottom', fontsize=11)
 #
-# rects1 = ax.bar(x - width * 2, auc, width, alpha=0.5, label='Accuracy')
-# rects2 = ax.bar(x - width + 0.01, pre, width, alpha=0.5, label='Precision')
-# rects3 = ax.bar(x + 0.02, rec, width, alpha=0.5, label='Recall')
-# rects4 = ax.bar(x + width + 0.03, f, width, alpha=0.5, label='F-score')
+# rects0 = ax.bar(x - width - 0.12, auc, width, alpha=0.5, label='AUC')
+# rects1 = ax.bar(x - width -0.01, aucc, width, alpha=0.5, label='Accuracy')
+# rects2 = ax.bar(x - width + 0.10, pre, width, alpha=0.5, label='Precision')
+# rects3 = ax.bar(x + 0.11, rec, width, alpha=0.5, label='Recall')
+# rects4 = ax.bar(x + width + 0.12, f, width, alpha=0.5, label='F-score')
 # # Add some text for labels, title and custom x-axis tick labels, etc.
-# ax.set_ylabel('Evaluation indices')
+# # ax.set_ylabel('Evaluation indices')
+# ax.set_ylabel('评估指标')
 # # ax.set_title('Scores by group and gender')
 # ax.set_xticks(x)
 # ax.set_xticklabels(labels)
 # ax.legend(loc=6)
 # plt.legend(loc=7)
 # fig.tight_layout()
-# plt.savefig('E:\paper\\2203\\figures\\hyper.png', bbox_inches='tight', dpi=200)
+# plt.savefig('C:\\Users\\stone\\Desktop\\dlw\\BOwxsc.png', bbox_inches='tight', dpi=200)
 # plt.show()
 #
 # rects1 = ax[0, 0].bar(x - width / 2, knn_pre, width, label='Before')
@@ -428,15 +462,42 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 # plt.savefig('E:\paper\\2203\\figures\\SKBVSall.png', bbox_inches='tight', dpi=200)
 # plt.savefig('E:\paper\\2203\\figures\\REFVSall.png', bbox_inches='tight', dpi=200)
 
-# 运行时间对比图
+# # 运行时间对比图
+from pylab import mpl
+mpl.rcParams["font.sans-serif"] = ["SimHei"]
 fig, ax = plt.subplots(constrained_layout=True, figsize=(9, 6), dpi=200)
 x = ["1", "8", "16", "32", "64"]
-y = [36, 45.40, 59.55, 66.55, 78.45]
-y2 = [33.14, 46.10, 58.20, 64.23, 76.12]
-y3 = [31.05, 44.02, 56.41, 62.88, 74.66]
-y4 = [30.65, 43.55, 52.65, 61.55, 70.55]
-y5 = [27.5, 40.25, 46.63, 55.52, 66.89]
-y6 = [25.25, 37.55, 40.12, 47.24, 58.65]
+# SJTU
+# y = [7.6, 12.54, 16.55, 24.55, 32.45]
+# y2 = [6.55, 12.12, 17.20, 22.23, 29.12]
+# y3 = [6.05, 9.02, 14.41, 19.88, 28.66]
+# y4 = [5.23, 6.55, 14.65, 18.55, 24.55]
+# y5 = [4.02, 5.75, 9.63, 11.52, 18.89]
+# y6 = [2.25, 4.55, 8.12, 12.24, 15.65]
+#
+# # USTC
+# y = [8.4, 13.64, 17.25, 25.50, 33.85]
+# y2 = [7.85, 12.33, 17.20, 22.33, 29.02]
+# y3 = [7.05, 11.02, 16.41, 19.92, 29.66]
+# y4 = [4.65, 6.55, 13.65, 18.65, 24.70]
+# y5 = [2.77, 6.456, 9.88, 13.92, 20.89]
+# y6 = [2.63, 4.55, 9.12, 11.64, 17.65]
+
+# # SSC
+# y = [6.4, 10.64, 14.25, 20.60, 29.85]
+# y2 = [6.05, 9.73, 15.20, 18.98, 27.02]
+# y3 = [5.15, 10.02, 13.02, 18.00, 25.42]
+# y4 = [3.05, 6.15, 10.95, 11.65, 21.30]
+# y5 = [2.37, 5.32, 8.38, 11.02, 17.89]
+# y6 = [2.02, 4.04, 7.12, 9.64, 15.35]
+
+# WXSC
+y = [4.90, 7.64, 10.15, 14.60, 20.85]
+y2 = [4.55, 7.03, 10.00, 13.98, 20.02]
+y3 = [4.15, 6.62, 9.02, 13.00, 18.72]
+y4 = [2.75, 6.15, 9.25, 10.65, 15.60]
+y5 = [2.37, 5.32, 7.88, 8.12, 13.79]
+y6 = [1.89, 3.77, 6.12, 7.44, 12.35]
 
 ax.plot(x, y, marker='o', label="x01-local")
 ax.plot(x, y2, marker='^', label="x06-local")
@@ -447,9 +508,13 @@ ax.plot(x, y6, marker='d', label="x12-cluster")
 ax.grid(axis='x')
 ax.legend()
 
-ax.set_xlabel('Dataset size')
+# ax.set_xlabel('Dataset size')
+ax.set_xlabel('数据集大小倍数')
 # ax.set_ylabel('Cost time(min)')
-ax.set_ylabel('Cost time/(s)')
-ax.set_title('Local and cluster runtime comparison')
+# ax.set_ylabel('Cost time/(s)')
+ax.set_ylabel('预测时间/(秒)')
+# ax.set_title('RS-BOLGBM local and cluster runtime comparison')
+# ax.set_title('RS-BOLGBM 本地与集群运行时间对比')
 # plt.savefig('E:\paper\\2203\\figures\\lvsc.png', bbox_inches='tight', dpi=200)
+plt.savefig('C:\\Users\\stone\\Desktop\\dlw\\RTwxsc.png', bbox_inches='tight', dpi=200)
 plt.show()
